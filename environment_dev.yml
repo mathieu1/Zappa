@@ -1,0 +1,10 @@
+name: zappa_dev
+channels:
+  - defaults
+dependencies:
+  - python=2.7
+  - requests
+  - libffi
+  - cffi
+  - cryptography
+  - pip
