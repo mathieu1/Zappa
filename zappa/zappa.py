@@ -334,16 +334,17 @@ class Zappa(object):
             # NOTE: Right now, this will only work for conda packages. As a future enhancement,
             #       we can consider how best to include both conda and pip packages here.
             package_query = call(
-                "%(conda_exe)s list --export --prefix %(conda_env_path)s" % {
+                "%(conda_exe)s list --json --prefix %(conda_env_path)s" % {
                     'conda_exe': conda_exe,
                     'conda_env_path': conda_env_path,
                 }
             )
-            print(package_query.stdout)
-            packages = package_query.stdout.splitlines()[3:]
+            packages = ('='.join((pkg['name'], pkg['version']))
+                    for pkg in json.loads(package_query.stdout)
+                    if pkg['name'] not in exclude_conda_packages)
 
             call(
-                "%(conda_exe)s install --yes --mkdir --json --prefix %(temp_conda_env_path)s "
+                "%(conda_exe)s install --yes --mkdir --json --force --prefix %(temp_conda_env_path)s "
                 "%(packages)s" % {
                     'conda_exe': conda_exe,
                     'temp_conda_env_path': temp_conda_env_path,
@@ -362,7 +363,6 @@ class Zappa(object):
                 }
             )
 
-        if len(exclude_conda_packages):
             # remove excluded packages from the environment
             call(
                 "%(conda_exe)s remove --yes --force --json --prefix %(temp_conda_env_path)s "
